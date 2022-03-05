@@ -1,0 +1,14 @@
+syntax = "proto3";
+package hello;
+option go_package = "../hello";
+//protoc.exe --go_out=plugins=grpc:. hello.proto
+service Hello{
+  rpc SayHelloStream (HelloReq) returns(HelloResp){}
+}
+
+message HelloReq{
+  string name = 1;
+}
+message HelloResp {
+  string name = 1;
+}
