@@ -15,7 +15,7 @@ const (
 	schema = "etcd"
 )
 
-// Resolver for grpc client
+// Resolver for zgrpc client
 type Resolver struct {
 	schema      string
 	EtcdAddrs   []string

@@ -1,7 +1,7 @@
-package grpc
+package zgrpc
 
 import (
-	"github.com/hxzhouh/zrpc/pkg/flag"
+	"fmt"
 	"github.com/hxzhouh/zrpc/pkg/logger"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -44,8 +44,8 @@ type Config struct {
 
 func DefaultConfig() *Config {
 	return &Config{
-		Network:                   "tcp4",
-		Host:                      flag.String("host"),
+		Network:                   "tcp",
+		Host:                      "",
 		Port:                      9092,
 		Deployment:                "",
 		EnableAccessLog:           true,
@@ -58,4 +58,43 @@ func DefaultConfig() *Config {
 		streamInterceptors:        []grpc.StreamServerInterceptor{},
 		unaryInterceptors:         []grpc.UnaryServerInterceptor{},
 	}
+}
+
+func StdConfig(name string) *Config {
+	return RawConfig("jupiter.server." + name)
+}
+
+// RawConfig ...
+func RawConfig(key string) *Config {
+	var config = DefaultConfig()
+	return config
+}
+
+// 从配置中创建grpc。
+func (config *Config) MustBuild() *Server {
+	server, err := config.Build()
+	if err != nil {
+		logger.DefaultLogger.Fatal("build xgrpc server: %v", zap.Error(err))
+	}
+	return server
+}
+
+// Build ...
+func (config *Config) Build() (*Server, error) {
+	//if !config.DisableTrace {
+	//	config.unaryInterceptors = append(config.unaryInterceptors, traceUnaryServerInterceptor)
+	//	config.streamInterceptors = append(config.streamInterceptors, traceStreamServerInterceptor)
+	//}
+	//
+	//if !config.DisableMetric {
+	//	config.unaryInterceptors = append(config.unaryInterceptors, prometheusUnaryServerInterceptor)
+	//	config.streamInterceptors = append(config.streamInterceptors, prometheusStreamServerInterceptor)
+	//}
+
+	return newServer(config)
+}
+
+// Address ...
+func (config Config) Address() string {
+	return fmt.Sprintf("%s:%d", config.Host, config.Port)
 }

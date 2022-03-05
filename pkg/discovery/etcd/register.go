@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// Register for grpc server
+// Register for zgrpc server
 type Register struct {
 	EtcdAddrs   []string
 	DialTimeout int

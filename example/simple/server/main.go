@@ -6,30 +6,23 @@ import (
 	"github.com/hxzhouh/zrpc/example/simple/hello"
 	"github.com/hxzhouh/zrpc/pkg/application"
 	"github.com/hxzhouh/zrpc/pkg/logger"
-	"github.com/hxzhouh/zrpc/pkg/server"
-	"google.golang.org/grpc"
+	"github.com/hxzhouh/zrpc/pkg/server/zgrpc"
+	"go.uber.org/zap"
 )
 
 type Engine struct {
 	application.Application
 }
 
-func NewHelloService() *Engine {
-	hello := &Engine{}
-	if ok := hello.Startup(hello.serveGRPC()); ok != nil {
-
-	}
-
-	return hello
-}
-
 type HelloServiceImpl struct {
 }
 
 func (eng *Engine) serveGRPC() error {
-	//server := xgrpc.StdConfig("grpc").Build()
-	server := grpc.NewServer()
-	hello.RegisterHelloServer(server, new(HelloServiceImpl))
+	server, err := zgrpc.StdConfig("zgrpc").Build()
+	if err != nil {
+		return err
+	}
+	hello.RegisterHelloServer(server.Server, new(HelloServiceImpl))
 	return eng.Serve(server)
 }
 
@@ -37,10 +30,19 @@ func (t *HelloServiceImpl) SayHelloStream(ctx context.Context, in *hello.HelloRe
 	return &hello.HelloResp{Name: fmt.Sprintf("hello,%s", in.Name)}, nil
 }
 
+func NewEngine() *Engine {
+	eng := &Engine{}
+	if err := eng.Startup(
+		eng.serveGRPC,
+	); err != nil {
+		logger.DefaultLogger.Fatal("panic:", zap.Error(err))
+	}
+	return eng
+}
+
 func main() {
-	logger.DefaultLogger.Info("service running.....")
-	s := server.NewServer("hello", "1.0.0")
-	s.Init()
-	hello.RegisterHelloServer(s.Server(), &HelloServiceImpl{})
-	s.Run() // block here
+	eng := NewEngine()
+	if err := eng.Run(); err != nil {
+		logger.DefaultLogger.Error(err.Error())
+	}
 }
